@@ -1,0 +1,140 @@
+name: 💬 Telegram Notifications
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  PROJECT_PATH: 'src/SimpleApp'
+  TEST_PATH: 'tests/SimpleApp.Tests'
+
+jobs:
+  build:
+    name: 💡 Сборка проекта
+    runs-on: ubuntu-latest
+    steps:
+      - name: 💡 Загружаем код
+        uses: actions/checkout@v4
+
+      - name: 💡 Устанавливаем .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: 💡 Восстанавливаем зависимости
+        run: dotnet restore ${{ env.PROJECT_PATH }}
+
+      - name: 💡 Собираем проект
+        run: dotnet build ${{ env.PROJECT_PATH }} --configuration Release --no-restore
+
+      - name: 💡 Уведомляем о начале сборки
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            **Начинаем сборку!**
+            *Проект:* ${{ github.repository }}
+            *Автор:* ${{ github.actor }}
+            *Ветка:* ${{ github.ref_name }}
+            *Коммит:* ${GITHUB_SHA:0:7}
+            Ждите результат...
+          parse_mode: markdown
+
+  test:
+    name: ✅ Запуск тестов
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 💡 Загружаем код
+        uses: actions/checkout@v4
+
+      - name: 💡 Устанавливаем .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: ✅ Запускаем тесты
+        run: dotnet test ${{ env.TEST_PATH }} --verbosity normal --logger "trx"
+
+      - name: 📊 Анализируем результаты тестов
+        id: test-results
+        run: |
+          echo "Тесты выполнены!"
+          echo "results_analyzed=true" >> $GITHUB_OUTPUT
+
+  notify:
+    name: 📨 Итоговое уведомление
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: 📨 Формируем сообщение
+        id: message
+        run: |
+          BUILD_RESULT="${{ needs.build.result }}"
+          TEST_RESULT="${{ needs.test.result }}"
+          
+          if [[ "${{ job.status }}" == "success" ]]; then
+            MSG="*СБОРКА УСПЕШНА!*\nВсе этапы пройдены!"
+          elif [[ "${{ job.status }}" == "failure" ]]; then
+            MSG="*СБОРКА НЕ УДАЛАСЬ!*\nСтатус джоб:\nСборка: $BUILD_RESULT\nТесты: $TEST_RESULT\nПроверьте логи!"
+          else
+            MSG="*СБОРКА ОТМЕНЕНА*\nПроцесс был отменен."
+          fi
+          
+          echo "message<<EOF" >> $GITHUB_OUTPUT
+          echo "$MSG" >> $GITHUB_OUTPUT
+          echo -e "\n*Детали:*" >> $GITHUB_OUTPUT
+          echo "Проект: ${{ github.repository }}" >> $GITHUB_OUTPUT
+          echo "Ветка: ${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          echo "Коммит: ${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
+          echo "Время: $(date +'%H:%M:%S')" >> $GITHUB_OUTPUT
+          echo -e "\n[Открыть в Github](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: 📨 Отправляем итоговое уведомление
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: ${{ steps.message.outputs.message }}
+          parse_mode: markdown
+          disable_web_page_preview: true
+
+  special-notifications:
+    name: 💬 Специальные уведомления
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: 💬 Уведомление по расписанию
+        if: github.event_name == 'schedule'
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            Проект ${{ github.repository }} проверен по расписанию.
+            
+            Статус: ${{ job.status }}
+            
+            Время: $(date)
+          parse_mode: markdown
+
+      - name: 💬 Уведомление о релизе
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            *НОВЫЙ РЕЛИЗ!*
+            
+            Выпущена новая версия: ${{ github.ref_name }}
+            
+            Поздравляем команду!
+            Готово к развертыванию.
+          parse_mode: markdown
