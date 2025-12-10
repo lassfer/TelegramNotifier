@@ -36,11 +36,11 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            **Начинаем сборку!**
-            *Проект:* ${{ github.repository }}
-            *Автор:* ${{ github.actor }}
-            *Ветка:* ${{ github.ref_name }}
-            *Коммит:* ${GITHUB_SHA:0:7}
+            Начинаем сборку!
+            Проект: ${{ github.repository }}
+            Автор: ${{ github.actor }}
+            Ветка: ${{ github.ref_name }}
+            Коммит: ${{GITHUB_SHA:0:7}}
             Ждите результат...
           parse_mode: markdown
 
@@ -79,16 +79,16 @@ jobs:
           TEST_RESULT="${{ needs.test.result }}"
           
           if [[ "${{ job.status }}" == "success" ]]; then
-            MSG="*СБОРКА УСПЕШНА!*\nВсе этапы пройдены!"
+            MSG="СБОРКА УСПЕШНА! \n Все этапы пройдены!"
           elif [[ "${{ job.status }}" == "failure" ]]; then
-            MSG="*СБОРКА НЕ УДАЛАСЬ!*\nСтатус джоб:\nСборка: $BUILD_RESULT\nТесты: $TEST_RESULT\nПроверьте логи!"
+            MSG="СБОРКА НЕ УДАЛАСЬ! \n Статус джоб: \n Сборка: $BUILD_RESULT\nТесты: $TEST_RESULT\nПроверьте логи!"
           else
-            MSG="*СБОРКА ОТМЕНЕНА*\nПроцесс был отменен."
+            MSG=" СБОРКА ОТМЕНЕНА \n Процесс был отменен."
           fi
           
           echo "message<<EOF" >> $GITHUB_OUTPUT
           echo "$MSG" >> $GITHUB_OUTPUT
-          echo -e "\n*Детали:*" >> $GITHUB_OUTPUT
+          echo -e "\n Детали: " >> $GITHUB_OUTPUT
           echo "Проект: ${{ github.repository }}" >> $GITHUB_OUTPUT
           echo "Ветка: ${{ github.ref_name }}" >> $GITHUB_OUTPUT
           echo "Коммит: ${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
