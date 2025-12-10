@@ -2,8 +2,8 @@ name: 💬 Дневник настроения
 
 on:
   schedule:
-    - cron: '0 18 * * *'
-  workflow_dispatch:
+    - cron: '0 18 * * *'  # Каждый день в 18:00 UTC
+  workflow_dispatch:  # Для ручного запуска
 
 jobs:
   track-mood:
@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: 🛠️ Загрузка репозитория
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 📝 Добавление записи в дневник
         run: |
@@ -31,4 +33,6 @@ jobs:
           git config --global user.name "GitHub Actions"
           git add .
           git commit -m "📅 Добавлена запись за $(date +'%Y-%m-%d')"
-          git push
+          git push origin HEAD:main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
