@@ -4,8 +4,8 @@ from datetime import datetime
 import pytz
 
 # Токены
-TOKEN = "ВАШ_TELEGRAM_BOT_TOKEN"
-WEATHER_API_KEY = "ВАШ_OPENWEATHER_API_KEY"
+TOKEN = "7843198330:AAFVFFyvxG-BCCyWyFWa8zcNlez79Mjch_4"
+WEATHER_API_KEY = "W8SS35N4BVWCYMLDWYSD84Y7Z"
 
 bot = telebot.TeleBot(TOKEN)
 
