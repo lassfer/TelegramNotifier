@@ -40,7 +40,7 @@ jobs:
             Проект: ${{ github.repository }}
             Автор: ${{ github.actor }}
             Ветка: ${{ github.ref_name }}
-            Коммит: ${{GITHUB_SHA:0:7}}
+            Коммит: ${GITHUB_SHA:0:7}
             Ждите результат...
           parse_mode: markdown
 
