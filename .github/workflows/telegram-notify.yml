@@ -79,16 +79,16 @@ jobs:
           TEST_RESULT="${{ needs.test.result }}"
           
           if [[ "${{ job.status }}" == "success" ]]; then
-            MSG="СБОРКА УСПЕШНА! \n Все этапы пройдены!"
+            MSG="СБОРКА УСПЕШНА! Все этапы пройдены!"
           elif [[ "${{ job.status }}" == "failure" ]]; then
             MSG="СБОРКА НЕ УДАЛАСЬ! \n Статус джоб: \n Сборка: $BUILD_RESULT\nТесты: $TEST_RESULT\nПроверьте логи!"
           else
-            MSG=" СБОРКА ОТМЕНЕНА \n Процесс был отменен."
+            MSG="СБОРКА ОТМЕНЕНА Процесс был отменен."
           fi
           
           echo "message<<EOF" >> $GITHUB_OUTPUT
           echo "$MSG" >> $GITHUB_OUTPUT
-          echo -e "\n Детали: " >> $GITHUB_OUTPUT
+          echo -e "\nДетали: " >> $GITHUB_OUTPUT
           echo "Проект: ${{ github.repository }}" >> $GITHUB_OUTPUT
           echo "Ветка: ${{ github.ref_name }}" >> $GITHUB_OUTPUT
           echo "Коммит: ${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
